@@ -17,20 +17,27 @@ public class AndroidAudioRenderer implements AudioRenderer {
 
     private final Context context;
     private final boolean enableAudioFx;
+    private final boolean preferPassthrough;
 
     private AudioTrack track;
 
-    public AndroidAudioRenderer(Context context, boolean enableAudioFx) {
+    public AndroidAudioRenderer(Context context, boolean enableAudioFx, boolean preferPassthrough) {
         this.context = context;
         this.enableAudioFx = enableAudioFx;
+        this.preferPassthrough = preferPassthrough;
     }
 
     private AudioTrack createAudioTrack(int channelConfig, int sampleRate, int bufferSize, boolean lowLatency) {
         AudioAttributes.Builder attributesBuilder = new AudioAttributes.Builder()
                 .setUsage(AudioAttributes.USAGE_GAME);
-        AudioFormat format = new AudioFormat.Builder()
-                .setEncoding(AudioFormat.ENCODING_PCM_16BIT)
-                .setSampleRate(sampleRate)
+        AudioFormat.Builder formatBuilder = new AudioFormat.Builder();
+        if(preferPassthrough){
+            formatBuilder.setEncoding(AudioFormat.ENCODING_AC3);
+        }
+        else {
+            formatBuilder.setEncoding(AudioFormat.ENCODING_PCM_16BIT);
+        }
+        AudioFormat format = formatBuilder.setSampleRate(sampleRate)
                 .setChannelMask(channelConfig)
                 .build();
 
@@ -134,9 +141,13 @@ public class AndroidAudioRenderer implements AudioRenderer {
                 case 1:
                 case 3:
                     // Try the larger buffer size
+                    int format;
+                    if(preferPassthrough){
+                        format = AudioFormat.ENCODING_AC3;
+                    }else format = AudioFormat.ENCODING_PCM_16BIT;
                     bufferSize = Math.max(AudioTrack.getMinBufferSize(sampleRate,
                             channelConfig,
-                            AudioFormat.ENCODING_PCM_16BIT),
+                            format),
                             bytesPerFrame * 2);
 
                     // Round to next frame

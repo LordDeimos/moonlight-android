@@ -342,7 +342,7 @@ public class MoonBridge {
                                               String rtspSessionUrl, int serverCodecModeSupport,
                                               int width, int height, int fps,
                                               int bitrate, int packetSize, int streamingRemotely,
-                                              int audioConfiguration, int supportedVideoFormats,
+                                              int audioConfiguration, boolean audioPreferPassthrough, int supportedVideoFormats,
                                               int clientRefreshRateX100,
                                               byte[] riAesKey, byte[] riAesIv,
                                               int videoCapabilities,

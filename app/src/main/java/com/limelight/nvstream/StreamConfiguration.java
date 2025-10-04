@@ -22,6 +22,7 @@ public class StreamConfiguration {
     private int maxPacketSize;
     private int remote;
     private MoonBridge.AudioConfiguration audioConfiguration;
+    private boolean audioPreferPassthrough;
     private int supportedVideoFormats;
     private int attachedGamepadMask;
     private int encryptionFlags;
@@ -112,6 +113,11 @@ public class StreamConfiguration {
             config.audioConfiguration = audioConfig;
             return this;
         }
+
+        public StreamConfiguration.Builder setAudioPreferPassthrough(boolean preferPassthrough){
+            config.audioPreferPassthrough = preferPassthrough;
+            return this;
+        }
         
         public StreamConfiguration.Builder setSupportedVideoFormats(int supportedVideoFormats) {
             config.supportedVideoFormats = supportedVideoFormats;
@@ -146,6 +152,7 @@ public class StreamConfiguration {
         this.sops = true;
         this.enableAdaptiveResolution = false;
         this.audioConfiguration = MoonBridge.AUDIO_CONFIGURATION_STEREO;
+        this.audioPreferPassthrough = false;
         this.supportedVideoFormats = MoonBridge.VIDEO_FORMAT_H264;
         this.attachedGamepadMask = 0;
     }
@@ -197,7 +204,11 @@ public class StreamConfiguration {
     public MoonBridge.AudioConfiguration getAudioConfiguration() {
         return audioConfiguration;
     }
-    
+
+    public boolean getAudioPreferPassthrough() {
+        return audioPreferPassthrough;
+    }
+
     public int getSupportedVideoFormats() {
         return supportedVideoFormats;
     }

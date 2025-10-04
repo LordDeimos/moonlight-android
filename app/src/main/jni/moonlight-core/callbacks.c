@@ -278,6 +278,21 @@ void BridgeArDecodeAndPlaySample(char* sampleData, int sampleLength) {
     }
 }
 
+void BridgeArPlaySample(char* sampleData, int sampleLength){
+    JNIEnv* env = GetThreadEnv();
+
+    jshort* decodedData = (*env)->GetPrimitiveArrayCritical(env, DecodedAudioBuffer, NULL);
+
+    memcpy(decodedData,sampleData,sampleLength);
+
+    (*env)->ReleasePrimitiveArrayCritical(env, DecodedAudioBuffer, decodedData, 0);
+
+    (*env)->CallStaticVoidMethod(env, GlobalBridgeClass, BridgeArPlaySampleMethod, DecodedAudioBuffer);
+    if ((*env)->ExceptionCheck(env)) {
+        (*JVM)->DetachCurrentThread(JVM);
+    }
+}
+
 void BridgeClStageStarting(int stage) {
     JNIEnv* env = GetThreadEnv();
 
@@ -410,6 +425,7 @@ static AUDIO_RENDERER_CALLBACKS BridgeAudioRendererCallbacks = {
         .stop = BridgeArStop,
         .cleanup = BridgeArCleanup,
         .decodeAndPlaySample = BridgeArDecodeAndPlaySample,
+        .playSample = BridgeArPlaySample,
         .capabilities = CAPABILITY_SUPPORTS_ARBITRARY_AUDIO_DURATION
 };
 
@@ -457,7 +473,7 @@ Java_com_limelight_nvstream_jni_MoonBridge_startConnection(JNIEnv *env, jclass c
                                                            jstring rtspSessionUrl, jint serverCodecModeSupport,
                                                            jint width, jint height, jint fps,
                                                            jint bitrate, jint packetSize, jint streamingRemotely,
-                                                           jint audioConfiguration, jint supportedVideoFormats,
+                                                           jint audioConfiguration, jboolean audioPreferPassthrough ,jint supportedVideoFormats,
                                                            jint clientRefreshRateX100,
                                                            jbyteArray riAesKey, jbyteArray riAesIv,
                                                            jint videoCapabilities,
@@ -477,6 +493,7 @@ Java_com_limelight_nvstream_jni_MoonBridge_startConnection(JNIEnv *env, jclass c
             .packetSize = packetSize,
             .streamingRemotely = streamingRemotely,
             .audioConfiguration = audioConfiguration,
+            .audioPreferPassthrough = audioPreferPassthrough,
             .supportedVideoFormats = supportedVideoFormats,
             .clientRefreshRateX100 = clientRefreshRateX100,
             .encryptionFlags = ENCFLG_AUDIO,
@@ -498,6 +515,10 @@ Java_com_limelight_nvstream_jni_MoonBridge_startConnection(JNIEnv *env, jclass c
     if (hasFastAes()) {
         streamConfig.encryptionFlags = ENCFLG_ALL;
     }
+
+    /*if(audioPreferPassthrough){
+        BridgeAudioRendererCallbacks.capabilities |= CAPABILITY_DIRECT_SUBMIT;
+    }*/
 
     int ret = LiStartConnection(&serverInfo,
                                 &streamConfig,
